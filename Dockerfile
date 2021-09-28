@@ -11,7 +11,7 @@ COPY requirements.txt requirements.txt
 
 RUN pip3 install -r requirements.txt
 
-COPY make.py make.py
+COPY app/make.py make.py
 COPY .git .git
 
 RUN python3 make.py
