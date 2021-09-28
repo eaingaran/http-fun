@@ -8,7 +8,7 @@ RUN apt-get update \
 WORKDIR /app
 
 COPY requirements.txt requirements.txt
-USER root
+
 RUN pip3 install -r requirements.txt
 
 COPY make.py make.py
