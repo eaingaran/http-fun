@@ -14,4 +14,6 @@ RUN rm make.py
 
 copy app/app.py app.py
 
-CMD ["python3", "-m" , "flask", "run", "--host=0.0.0.0"]
+EXPOSE 5000
+
+CMD ["python3", "app.py", "-p", "5000"]
