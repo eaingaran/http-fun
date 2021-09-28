@@ -1,4 +1,4 @@
-from flask import Flask, request, jsonify, make_response
+from flask import Flask, request, jsonify
 import re
 
 
@@ -19,7 +19,7 @@ def version_info():
 
 @app.errorhandler(404)
 def handle_404(e):
-    return jsonify({'Status Code': 404, 'Message': str(e)}), 200
+    return jsonify({'Status Code': 404, 'Message': str(e)}), 404
 
 
 def say_hello():
