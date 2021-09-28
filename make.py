@@ -1,7 +1,7 @@
 """
-
 essentially compiles the application.
-
+finds out SHA and name from git and
+creates an config.ini file for the application to use.
 """
 
 import git

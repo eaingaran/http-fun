@@ -22,4 +22,4 @@ RUN rm -rf .git
 COPY app/app.py app.py
 EXPOSE 5000
 
-CMD ["python3", "app.py", "-p", "5000"]
+CMD ["python3", "app.py", "-p", "5000", '-e', 'prod']
