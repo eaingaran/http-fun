@@ -9,7 +9,7 @@ A simple http service to try out things.
 - /helloworld
 - /versionz
 
-### Examples
+### Specs
 
 > /helloworld
 >> Greets the user with a simple Hello. 
