@@ -1,5 +1,5 @@
 import unittest
-from app import main
+from app import app
 
 
 class HTTPServiceTest(unittest.TestCase):
@@ -8,7 +8,7 @@ class HTTPServiceTest(unittest.TestCase):
         self.assertEqual(True, True)
 
     def test_say_hello(self):
-        hello_response = main.say_hello()
+        hello_response = app.say_hello()
         self.assertEqual('Hello', hello_response,
                          f'say_hello() shold have returned "Hello", but it returned "{hello_response}"')
 
