@@ -1,14 +1,13 @@
 import argparse
 import json
 import os
+import pathlib
 import re
 from datetime import datetime
-import pytz
 from logging.config import fileConfig
-import pathlib
 from os import path
 
-
+import pytz
 from flask import Flask, request, jsonify
 
 app = Flask(__name__)
@@ -43,7 +42,8 @@ def get_config(key):
 
 def log_requests(req, ts, status_code):
     app.logger.info(f'({req.method}) : {req.base_url} @ {ts} handled with status code {status_code}')
-    app.logger.debug({'Timestamp': ts, 'Host': req.host.split(':')[0], 'Port': req.host.split(':')[1] if req.host.__contains__(':') else 0,
+    app.logger.debug({'Timestamp': ts, 'Host': req.host.split(':')[0],
+                      'Port': req.host.split(':')[1] if req.host.__contains__(':') else 0,
                       'Endpoint': req.base_url.replace(req.host_url, ''), 'Method': req.method, 'args': dict(req.args),
                       'data': req.data.decode('ascii'), 'ResponseCode': status_code})
 
@@ -99,4 +99,3 @@ if __name__ == '__main__':
         override_port = args.port
 
     start_app('0.0.0.0', override_port, args.environment)
-

@@ -1,13 +1,12 @@
-import unittest
-from app.app import app
 import json
+import unittest
+
 import git
+
+from app.app import app
 
 
 class HTTPServiceTest(unittest.TestCase):
-
-    def setUp(self):
-        self.app = app.test_client()
 
     def test_base(self):
         # This test is to check the setup.
@@ -54,7 +53,9 @@ class HTTPServiceTest(unittest.TestCase):
             payload = json.loads(response.data.decode('ascii'))
             self.assertIsNotNone(payload)
             self.assertEqual(404, payload['Status Code'])
-            self.assertEqual("404 Not Found: The requested URL was not found on the server. If you entered the URL manually please check your spelling and try again.", payload['Message'])
+            self.assertEqual(
+                "404 Not Found: The requested URL was not found on the server. If you entered the URL manually please check your spelling and try again.",
+                payload['Message'])
 
 
 if __name__ == '__main__':

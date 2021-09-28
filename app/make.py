@@ -4,8 +4,9 @@ finds out SHA and name from git and
 creates an config.ini file for the application to use.
 """
 
-import git
 import json
+
+import git
 
 
 def create_app_info():

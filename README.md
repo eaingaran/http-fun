@@ -19,7 +19,7 @@ A simple http service to try out things.
 >> If the endpoint is called with a name parameter, service greets the person with name split on capitalization, like so. "Hello Person Name"
 >> 
 >> localhost:8080/helloworld?name=AingaranElango&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;==>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"Hello Aingaran Elango"
->
+
 > /versionz
 >> Provides information on Application.
 >>
@@ -34,4 +34,33 @@ A simple http service to try out things.
 
 ### Setup
 
-Will be updated soon...
+#### Requirements
+- Python 3+
+- Docker
+- git
+
+#### Setup dependencies
+```
+pip3 install -r requirements.txt
+python3 app/make.py
+```
+
+#### Run Tests
+```
+python3 -m unittest test/app-test.py
+```
+
+#### Build image
+```
+git clone https://github.com/eaingaran/http-fun.git
+cd http-fun
+docker build . --tag=<image-name>:<image-tag>
+```
+
+#### Run image
+```
+docker run -p 5000:5000 <image-name>:<image-tag>
+curl localhost:5000/helloworld
+curl localhost:5000/helloworld?name=AlfredENeumann
+curl localhost:5000/versionz
+```
