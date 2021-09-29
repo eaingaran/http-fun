@@ -69,10 +69,13 @@ pipeline {
                 }
             }
         }
-        stage('Deploying image')    {
-            steps   {
+        stage('Deploying image') {
+            steps {
                 dir('http-fun') {
-                    sh 'kubectl create -f deployment.yaml'
+                    script  {
+                        sh 'kubectl create -f deployment.yaml'
+                        echo 'triggered deployment'
+                    }
                 }
             }
         }
