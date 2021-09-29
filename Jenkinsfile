@@ -3,6 +3,10 @@ pipeline {
         registry = "eaingaran/http-fun"
         registryCredential = 'dockerhub_id'
         dockerImage = ''
+        projectId = 'expanded-aria-326609'
+        clusterName = 'autopilot-cluster-1'
+        location = 'us-central1'
+        credentialsId = 'expanded-aria-326609'
     }
     agent any
     stages {
@@ -61,7 +65,7 @@ pipeline {
             steps {
                 dir('http-fun') {
                     script  {
-                        docker.withRegistry( '', registryCredential) {
+                        docker.withRegistry('https://registry.hub.docker.com', registryCredential) {
                             dockerImage.push()
                             dockerImage.push("latest")
                         }
@@ -70,12 +74,9 @@ pipeline {
             }
         }
         stage('Deploying image') {
-            steps {
+            steps{
                 dir('http-fun') {
-                    script  {
-                        sh 'kubectl create -f deployment.yaml'
-                        echo 'triggered deployment'
-                    }
+                    step([$class: 'KubernetesEngineBuilder', projectId: env.credentialsId, clusterName: env.clusterName, location: env.location, manifestPattern: 'deployment.yaml', credentialsId: env.credentialsId, verifyDeployments: true])
                 }
             }
         }
