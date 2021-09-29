@@ -10,20 +10,7 @@ from os import path
 import pytz
 from flask import Flask, request, jsonify
 
-app = Flask(__name__)
 app_config = None
-
-
-# validate the given argument to ensure it is an integer.
-def numeric_val(val):
-    if not val.isnumeric():
-        raise argparse.ArgumentTypeError('Input Error. Expected a numeric value for duration. Found "{}"'
-                                         .format(val))
-    try:
-        return int(val)
-    except Exception as e:
-        raise argparse.ArgumentTypeError("""Couldn't parse the value passed into integer. Value passed is "{}" """
-                                         .format(val))
 
 
 def get_config(key):
@@ -40,12 +27,33 @@ def get_config(key):
     return app_config[key] if key in app_config else ''
 
 
+app_name = get_config('ProjectName')
+app = Flask(app_name)
+
+
+# validate the given argument to ensure it is an integer.
+def numeric_val(val):
+    if not val.isnumeric():
+        raise argparse.ArgumentTypeError('Input Error. Expected a numeric value for duration. Found "{}"'
+                                         .format(val))
+    try:
+        return int(val)
+    except Exception as e:
+        raise argparse.ArgumentTypeError("""Couldn't parse the value passed into integer. Value passed is "{}" """
+                                         .format(val))
+
+
 def log_requests(req, ts, status_code):
     app.logger.info(f'({req.method}) : {req.base_url} @ {ts} handled with status code {status_code}')
     app.logger.debug({'Timestamp': ts, 'Host': req.host.split(':')[0],
                       'Port': req.host.split(':')[1] if req.host.__contains__(':') else 0,
                       'Endpoint': req.base_url.replace(req.host_url, ''), 'Method': req.method, 'args': dict(req.args),
                       'data': req.data.decode('ascii'), 'ResponseCode': status_code})
+
+
+@app.route("/healthcheck")
+def health_check():
+    return jsonify({"pong": True}), 200
 
 
 @app.route('/helloworld')
@@ -68,6 +76,15 @@ def version_info():
 def handle_404(e):
     log_requests(request, datetime.now(pytz.utc), 404)
     return jsonify({'Status Code': 404, 'Message': str(e)}), 404
+
+
+@app.route('/destroy')
+def destroy_app():
+    shutdown_sequence = request.environ.get('werkzeug.server.shutdown')
+    if shutdown_sequence is None:
+        raise RuntimeError('Not running with the Werkzeug Server')
+    shutdown_sequence()
+    return 'Shutting down'
 
 
 def start_app(host, port, environment):
