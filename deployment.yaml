@@ -28,7 +28,7 @@ spec:
     spec:
       containers:
       - name: http-fun
-        image: http-fun:latest
+        image: eaingaran/http-fun:latest
         imagePullPolicy: IfNotPresent
         ports:
         - containerPort: 5000

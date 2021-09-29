@@ -1,10 +1,12 @@
 pipeline {
     environment {
-        python_path = ''
+        registry = "eaingaran/http-fun"
+        registryCredential = 'dockerhub_id'
+        dockerImage = ''
     }
     agent any
     stages {
-        stage('Clean up workspace') {
+        stage('Setup up workspace') {
             steps {
                 sh 'rm -rf http-fun'
             }
@@ -45,14 +47,33 @@ pipeline {
                 """
             }
         }
-        stage('Build and Upload image') {
+        stage('Build image') {
             steps {
-                echo 'Yet to be implemented'
+                dir('http-fun') {
+                  script  {
+                    dockerImage = docker.build registry + ":v1.$BUILD_NUMBER"
+                  }
+                }
+
             }
         }
-        stage('Deploy Image') {
+        stage('Uploading image') {
             steps {
-                echo 'Yet to be implemented'
+                dir('http-fun') {
+                    script  {
+                        docker.withRegistry( '', registryCredential) {
+                            dockerImage.push()
+                            dockerImage.push("latest")
+                        }
+                    }
+                }
+            }
+        }
+        stage('Deploying image')    {
+            steps   {
+                dir('http-fun') {
+                    sh 'kubectl create -f deployment.yaml'
+                }
             }
         }
     }
