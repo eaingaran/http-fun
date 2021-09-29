@@ -24,4 +24,4 @@ COPY app/app.py app.py
 COPY app/logger.cfg logger.cfg
 EXPOSE 5000
 
-CMD ["python3", "app.py", "-p", "5000", '-e', 'prod']
+CMD ["python3", "app.py", "-p", "5000", "-e", "prod"]

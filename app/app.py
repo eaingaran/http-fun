@@ -84,7 +84,7 @@ def destroy_app():
     if shutdown_sequence is None:
         raise RuntimeError('Not running with the Werkzeug Server')
     shutdown_sequence()
-    return 'Shutting down'
+    return 'Shutdown initiated...'
 
 
 def start_app(host, port, environment):
@@ -93,13 +93,6 @@ def start_app(host, port, environment):
         serve(app, host=host, port=port)
     else:
         app.run(host=host, port=port)
-
-
-def destroy_app():
-    func = request.environ.get('werkzeug.server.shutdown')
-    if func is None:
-        raise RuntimeError('Not running with the Werkzeug Server')
-    func()
 
 
 if __name__ == '__main__':
