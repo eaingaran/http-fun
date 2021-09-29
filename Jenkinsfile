@@ -4,26 +4,44 @@ pipeline {
     }
     agent any
     stages {
-        stage('Checkout Code') {
+        stage('Clean up workspace') {
             steps {
-                script {
-                    git branch: "master",
-                        credentialsId: 'github-app-jenkins',
-                        url: 'https://github.com/eaingaran/http-fun.git'
-                }
+                sh 'rm -rf http-fun'
             }
         }
-        stage('Unit Test') {
+        stage('Checkout Code') {
+            steps {
+                sh 'git clone https://github.com/eaingaran/http-fun.git'
+            }
+        }
+        stage('Setup venv') {
             steps {
                 echo 'setting up venv'
                 sh 'python3 -m pip install --upgrade pip'
                 sh 'pip3 install --upgrade setuptools'
                 sh 'pip3 install virtualenv'
-                python_path = sh(script: 'which python3', returnStdout: true)
-                sh 'virtualenv -p ' + python_path + ' venv'
-                sh 'source venv/bin/activate'
-                sh 'which python3'
-                sh 'deactivate'
+                sh """
+                . venv/bin/activate
+                pip install -r http-fun/requirements.txt
+                """
+            }
+        }
+        stage('creating config') {
+            steps {
+                sh """
+                . venv/bin/activate
+                cd http-fun
+                python3 app/make.py
+                """
+            }
+        }
+        stage('Unit Test') {
+            steps {
+                sh """
+                . venv/bin/activate
+                cd http-fun
+                python3 -m unittest test/app-test.py
+                """
             }
         }
         stage('Build and Upload image') {
