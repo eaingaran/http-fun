@@ -31,7 +31,8 @@ pipeline {
                 sh """
                 . venv/bin/activate
                 cd http-fun
-                python3 app/make.py
+                python3 make.py
+                cp config.ini app/config.ini
                 """
             }
         }
