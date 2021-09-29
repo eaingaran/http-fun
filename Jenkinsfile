@@ -15,11 +15,13 @@ pipeline {
                 sh 'rm -rf http-fun'
             }
         }
+        // manual cloning is required to get the whole repository for commit hashes (using make.py)
         stage('Checkout Code') {
             steps {
                 sh 'git clone https://github.com/eaingaran/http-fun.git'
             }
         }
+        // use venv to avoid contamination of agents
         stage('Setup venv') {
             steps {
                 echo 'setting up venv'
@@ -67,17 +69,25 @@ pipeline {
                     script  {
                         docker.withRegistry('https://registry.hub.docker.com', registryCredential) {
                             dockerImage.push()
-                            dockerImage.push("latest")
+                            dockerImage.push("latest")  // tag the image with "latest" as well
                         }
                     }
                 }
             }
         }
-        stage('Deploying image') {
+        // This stage can deploy ONLY if the cluster is ready..
+        // using gke autopilot with this would be cost efficient.
+        /*stage('Deploying image') {
             steps{
                 dir('http-fun') {
                     step([$class: 'KubernetesEngineBuilder', projectId: env.credentialsId, clusterName: env.clusterName, location: env.location, manifestPattern: 'deployment.yaml', credentialsId: env.credentialsId, verifyDeployments: true])
                 }
+            }
+        }*/
+        stage('Cleanup Workspace')  {
+            steps   {
+                sh 'rm -rf http-fun'
+                sh 'docker system prune --all --force'
             }
         }
     }
