@@ -1,5 +1,7 @@
 pipeline {
     environment {
+    // these should be parameterised and
+    // should be overridable from jenkins or any CI/CD system.
         registry = "eaingaran/http-fun"
         registryCredential = 'dockerhub_id'
         dockerImage = ''
@@ -7,6 +9,9 @@ pipeline {
         clusterName = 'autopilot-cluster-1'
         location = 'us-central1'
         credentialsId = 'expanded-aria-326609'
+        shouldCreateCuster = false
+        shouldDeployApp = false
+        shouldDeleteCluster = false
     }
     agent any
     stages {
@@ -75,15 +80,39 @@ pipeline {
                 }
             }
         }
-        // This stage can deploy ONLY if the cluster is ready..
-        // using gke autopilot with this would be cost efficient.
-        /*stage('Deploying image') {
-            steps{
-                dir('http-fun') {
-                    step([$class: 'KubernetesEngineBuilder', projectId: env.credentialsId, clusterName: env.clusterName, location: env.location, manifestPattern: 'deployment.yaml', credentialsId: env.credentialsId, verifyDeployments: true])
+        stage('Create a GKE Cluster')   {
+            when {
+                expression { shouldCreateCuster }
+            }
+            steps   {
+                dir('http-fun/infra')   {
+                    sh 'terraform validate' // for testing, remove it later
+                    sh 'terraform apply'
                 }
             }
-        }*/
+        }
+        // This stage can deploy ONLY if the cluster is ready..
+        // using gke autopilot with this would be cost efficient.
+        stage('Deploying image') {
+            when {
+                expression { shouldDeployApp }
+            }
+            steps{
+                dir('http-fun') {
+                    step([$class: 'KubernetesEngineBuilder', projectId: env.projectId, clusterName: env.clusterName, location: env.location, manifestPattern: 'deployment.yaml', credentialsId: env.credentialsId, verifyDeployments: true])
+                }
+            }
+        }
+        stage('Destroy the GKE Cluster')  {
+            when {
+                expression { shouldDeleteCluster }
+            }
+            steps   {
+                dir('http-fun/infra')   {
+                    sh 'terraform destroy'
+                }
+            }
+        }
         stage('Cleanup Workspace')  {
             steps   {
                 sh 'rm -rf http-fun'
