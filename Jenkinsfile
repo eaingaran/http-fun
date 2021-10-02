@@ -3,12 +3,12 @@ pipeline {
     // these should be parameterised and
     // should be overridable from jenkins or any CI/CD system.
         registry = "eaingaran/http-fun"
-        registryCredential = 'dockerhub_id'
+        registryCredential = 'dockerhub_id' // credential for dockerhub.
         dockerImage = ''
         projectId = 'expanded-aria-326609'
         clusterName = 'autopilot-cluster-1'
         location = 'us-central1'
-        credentialsId = 'expanded-aria-326609'
+        credentialsId = 'expanded-aria-326609'  // private key of the service account capable of deploying in GKE cluster
         shouldCreateCuster = false
         shouldDeployApp = false
         shouldDeleteCluster = false
