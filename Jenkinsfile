@@ -33,29 +33,34 @@ pipeline {
                 sh 'python3 -m pip install --upgrade pip'
                 sh 'pip3 install --upgrade setuptools'
                 sh 'pip3 install virtualenv'
-                sh """
-                . venv/bin/activate
-                pip install -r http-fun/requirements.txt
-                """
+                dir('http-fun') {
+                    sh """
+                    python3 -m virtualenv -p python3 venv
+                    . venv/bin/activate
+                    pip install -r requirements.txt
+                    """
+                }
             }
         }
         stage('creating config') {
             steps {
-                sh """
-                . venv/bin/activate
-                cd http-fun
-                python3 make.py
-                cp config.ini app/config.ini
-                """
+                dir('http-fun') {
+                    sh """
+                    . venv/bin/activate
+                    python3 make.py
+                    cp config.ini app/config.ini
+                    """
+                }
             }
         }
         stage('Unit Test') {
             steps {
-                sh """
-                . venv/bin/activate
-                cd http-fun
-                python3 -m unittest test/app-test.py
-                """
+                dir('http-fun') {
+                    sh """
+                    . venv/bin/activate
+                    python3 -m unittest test/app-test.py
+                    """
+                }
             }
         }
         stage('Build image') {
