@@ -8,7 +8,8 @@ pipeline {
         projectId = 'expanded-aria-326609'
         clusterName = 'autopilot-cluster-1'
         location = 'us-central1'
-        credentialsId = 'expanded-aria-326609'  // private key of the service account capable of deploying in GKE cluster
+        credentialsId = 'expanded-aria-326609'  // private key (as a google service account private key)of the service account capable of deploying in GKE cluster
+        serviceAccountOwner = credentials('sa-owner')  // private key (in an encoded secret text format) of the service account capable of creating GKE clusters.
         shouldCreateCuster = false
         shouldDeployApp = false
         shouldDeleteCluster = false
@@ -24,6 +25,7 @@ pipeline {
         stage('Checkout Code') {
             steps {
                 sh 'git clone https://github.com/eaingaran/http-fun.git'
+                sh 'echo $serviceAccountOwner | base64 -d > http-fun/infra/expanded-aria-326609-cd7b37395be6.json'
             }
         }
         // use venv to avoid contamination of agents
@@ -91,6 +93,7 @@ pipeline {
             }
             steps   {
                 dir('http-fun/infra')   {
+                    sh 'terraform init'
                     sh 'terraform validate' // for testing, remove it later
                     sh 'terraform apply'
                 }
@@ -114,15 +117,17 @@ pipeline {
             }
             steps   {
                 dir('http-fun/infra')   {
+                    sh 'terraform init'
                     sh 'terraform destroy'
                 }
             }
         }
-        stage('Cleanup Workspace')  {
-            steps   {
-                sh 'rm -rf http-fun'
-                sh 'docker system prune --all --force'
-            }
+    }
+    post {
+        always {
+            echo 'Cleaning up workspace...'
+            sh 'rm -rf http-fun'
+            sh 'docker system prune --all --force'
         }
     }
 }

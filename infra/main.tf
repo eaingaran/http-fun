@@ -8,6 +8,7 @@ terraform {
 }
 
 provider "google-beta" {
+  # This file will be created from jenkins secret and will be cleaned up before build finishes.
   credentials = file("expanded-aria-326609-cd7b37395be6.json")
 
   project = var.project_id
@@ -21,8 +22,6 @@ resource "google_container_cluster" "primary" {
   name     = var.cluster_name
   location = var.region
 
-  # We can't create a cluster with no node pool defined, but we want to only use
-  # separately managed node pools. So we create the smallest possible default
-  # node pool and immediately delete it.
+  # GKE Autopilot. Just a cluster is created and no nodes are created unless a deployment requires it.
   enable_autopilot = true
 }

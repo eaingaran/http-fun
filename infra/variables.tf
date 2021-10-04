@@ -1,5 +1,6 @@
 variable "project_id" {
-  description = "expanded-aria-326609"
+  description = "Name of the Project"
+  default = "expanded-aria-326609"
 }
 variable "cluster_name" {
   description = "The name for the GKE cluster"
