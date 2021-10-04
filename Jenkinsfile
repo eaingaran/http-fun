@@ -121,7 +121,7 @@ pipeline {
             }
             steps   {
                 dir('http-fun/infra')   {
-                    sh 'terraform destroy -auto-approve -json tfplan'
+                    sh 'terraform destroy -auto-approve -json'
                 }
             }
         }
