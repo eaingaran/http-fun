@@ -11,9 +11,9 @@ pipeline {
         credentialsId = 'expanded-aria-326609'  // private key (as a google service account private key)of the service account capable of deploying in GKE cluster
         serviceAccountOwnerEmail = 'sa-owner@expanded-aria-326609.iam.gserviceaccount.com'
         serviceAccountOwner = credentials('sa-owner')  // private key (in an encoded secret text format) of the service account capable of creating GKE clusters.
-        shouldCreateCuster = 'false' // Groovy evaluates all non-empty string as true. So it is safer to use a specific string as a condition.
+        shouldCreateCuster = 'true' // Groovy evaluates all non-empty string as true. So it is safer to use a specific string as a condition.
         shouldDeployApp = 'true'    // Any value other than 'true' will be considered as false.
-        shouldDeleteCluster = 'false' // CHANGE THIS TO SOMETHING ELSE IF YOU WANT THE SERVICE TO BE ACTIVE. THIS WILL DELETE THE CLUSTER.
+        shouldDeleteCluster = 'true' // CHANGE THIS TO SOMETHING ELSE IF YOU WANT THE SERVICE TO BE ACTIVE. THIS WILL DELETE THE CLUSTER.
         deployWith = 'Helm' // Can take values 'KubernetesEngineBuilder' or 'Helm'. Used to choose the deployment provider.
     }
     options {
@@ -33,6 +33,17 @@ pipeline {
             steps {
                 sh 'git clone https://github.com/eaingaran/http-fun.git'
                 sh 'echo $serviceAccountOwner | base64 -d > http-fun/infra/expanded-aria-326609-cd7b37395be6.json'
+                script  {
+                    if (currentBuild.previousBuild) {
+                        try {
+                            copyArtifacts filter: '.terraform.lock.hcl', projectName: currentBuild.projectName,
+                                          selector: specific("${currentBuild.previousBuild.number}")
+                        } catch(err) {
+                            echo 'problem when trying to get old artifacts'
+                            echo err.toString()
+                        }
+                    }
+                }
             }
         }
         // use venv to avoid contamination of agents
@@ -79,7 +90,6 @@ pipeline {
                     dockerImage = docker.build registry + ":v1.$BUILD_NUMBER"
                   }
                 }
-
             }
         }
         stage('Uploading image') {
@@ -102,7 +112,6 @@ pipeline {
                 dir('http-fun/infra')   {
                     sh 'terraform init'
                     sh 'terraform plan -out=tfplan -json'
-                    archiveArtifacts artifacts: 'tfplan'
                     sh 'terraform apply -auto-approve -json tfplan'
                 }
             }
@@ -140,13 +149,19 @@ pipeline {
             }
             steps   {
                 dir('http-fun/infra')   {
+                    sh 'terraform init'
                     sh 'terraform destroy -auto-approve -json'
+
                 }
             }
         }
     }
     post {
         always {
+            echo 'archiving terraform state'
+            dir('http-fun/infra') {
+                archiveArtifacts artifacts: '.terraform.lock.hcl'
+            }
             echo 'Cleaning up workspace...'
             sh 'rm -rf http-fun'
             sh 'docker system prune --all --force'
