@@ -10,9 +10,12 @@ pipeline {
         location = 'us-central1'
         credentialsId = 'expanded-aria-326609'  // private key (as a google service account private key)of the service account capable of deploying in GKE cluster
         serviceAccountOwner = credentials('sa-owner')  // private key (in an encoded secret text format) of the service account capable of creating GKE clusters.
-        shouldCreateCuster = false
-        shouldDeployApp = false
-        shouldDeleteCluster = false
+        shouldCreateCuster = 'true' // Groovy evaluates all non-empty string as true. So it is safer to use a specific string as a condition.
+        shouldDeployApp = 'true'    // Any value other than 'true' will be considered as false.
+        shouldDeleteCluster = 'true' // CHANGE THIS TO SOMETHING ELSE IF YOU WANT THE SERVICE TO BE ACTIVE. THIS WILL DELETE THE CLUSTER.
+    }
+    options {
+        skipDefaultCheckout true
     }
     agent any
     stages {
@@ -89,13 +92,14 @@ pipeline {
         }
         stage('Create a GKE Cluster')   {
             when {
-                expression { shouldCreateCuster }
+                expression { shouldCreateCuster == 'true' }
             }
             steps   {
                 dir('http-fun/infra')   {
                     sh 'terraform init'
-                    sh 'terraform validate' // for testing, remove it later
-                    sh 'terraform apply'
+                    sh 'terraform plan -out=tfplan -json'
+                    archiveArtifacts artifacts: 'tfplan'
+                    sh 'terraform apply -auto-approve -json tfplan'
                 }
             }
         }
@@ -103,7 +107,7 @@ pipeline {
         // using gke autopilot with this would be cost efficient.
         stage('Deploying image') {
             when {
-                expression { shouldDeployApp }
+                expression { shouldDeployApp == 'true' }
             }
             steps{
                 dir('http-fun') {
@@ -113,12 +117,11 @@ pipeline {
         }
         stage('Destroy the GKE Cluster')  {
             when {
-                expression { shouldDeleteCluster }
+                expression { shouldDeleteCluster == 'true' }
             }
             steps   {
                 dir('http-fun/infra')   {
-                    sh 'terraform init'
-                    sh 'terraform destroy'
+                    sh 'terraform destroy -auto-approve -json tfplan'
                 }
             }
         }
