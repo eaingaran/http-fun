@@ -9,10 +9,12 @@ pipeline {
         clusterName = 'autopilot-cluster-1'
         location = 'us-central1'
         credentialsId = 'expanded-aria-326609'  // private key (as a google service account private key)of the service account capable of deploying in GKE cluster
+        serviceAccountOwnerEmail = 'sa-owner@expanded-aria-326609.iam.gserviceaccount.com'
         serviceAccountOwner = credentials('sa-owner')  // private key (in an encoded secret text format) of the service account capable of creating GKE clusters.
-        shouldCreateCuster = 'true' // Groovy evaluates all non-empty string as true. So it is safer to use a specific string as a condition.
+        shouldCreateCuster = 'false' // Groovy evaluates all non-empty string as true. So it is safer to use a specific string as a condition.
         shouldDeployApp = 'true'    // Any value other than 'true' will be considered as false.
-        shouldDeleteCluster = 'true' // CHANGE THIS TO SOMETHING ELSE IF YOU WANT THE SERVICE TO BE ACTIVE. THIS WILL DELETE THE CLUSTER.
+        shouldDeleteCluster = 'false' // CHANGE THIS TO SOMETHING ELSE IF YOU WANT THE SERVICE TO BE ACTIVE. THIS WILL DELETE THE CLUSTER.
+        deployWith = 'Helm' // Can take values 'KubernetesEngineBuilder' or 'Helm'. Used to choose the deployment provider.
     }
     options {
         skipDefaultCheckout true
@@ -105,13 +107,27 @@ pipeline {
         }
         // This stage can deploy ONLY if the cluster is ready..
         // using gke autopilot with this would be cost efficient.
-        stage('Deploying image') {
+        stage('Deploying image (KubernetesEngineBuilder)') {
             when {
-                expression { shouldDeployApp == 'true' }
+                expression { shouldDeployApp == 'true' && deployWith == 'KubernetesEngineBuilder'}
             }
             steps{
                 dir('http-fun') {
                     step([$class: 'KubernetesEngineBuilder', projectId: env.projectId, clusterName: env.clusterName, location: env.location, manifestPattern: 'deployment.yaml', credentialsId: env.credentialsId, verifyDeployments: true])
+                }
+            }
+        }
+        // This stage can deploy ONLY if the cluster is ready..
+        // using gke autopilot with this would be cost efficient.
+        stage('Deploying image (Helm)') {
+            when {
+                expression { shouldDeployApp == 'true' && deployWith == 'Helm'}
+            }
+            steps{
+                dir('http-fun') {
+                    sh 'gcloud auth activate-service-account ' + env.serviceAccountOwnerEmail + ' --key-file=infra/expanded-aria-326609-cd7b37395be6.json --project=' + env.projectId
+                    sh 'gcloud container clusters get-credentials ' + env.clusterName + ' --region=' + env.location
+                    sh 'helm install http-fun helmchart/ --values helmchart/values.yaml'
                 }
             }
         }
