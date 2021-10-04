@@ -24,6 +24,8 @@ pipeline {
         stage('Setup up workspace') {
             steps {
                 sh 'rm -rf http-fun'
+                // below line is for testing.. comment if you are pulling source code from remote repo.
+                // sh 'cp -r /mnt/c/Users/Aingaran/PycharmProjects/http-fun/ http-fun/'
             }
         }
         // manual cloning is required to get the whole repository for commit hashes (using make.py)
@@ -107,6 +109,7 @@ pipeline {
         }
         // This stage can deploy ONLY if the cluster is ready..
         // using gke autopilot with this would be cost efficient.
+        // ths stage uses KubernetesEngineBuilder to deploy
         stage('Deploying image (KubernetesEngineBuilder)') {
             when {
                 expression { shouldDeployApp == 'true' && deployWith == 'KubernetesEngineBuilder'}
@@ -118,7 +121,7 @@ pipeline {
             }
         }
         // This stage can deploy ONLY if the cluster is ready..
-        // using gke autopilot with this would be cost efficient.
+        // this stage uses helm to deploy
         stage('Deploying image (Helm)') {
             when {
                 expression { shouldDeployApp == 'true' && deployWith == 'Helm'}
@@ -127,7 +130,7 @@ pipeline {
                 dir('http-fun') {
                     sh 'gcloud auth activate-service-account ' + env.serviceAccountOwnerEmail + ' --key-file=infra/expanded-aria-326609-cd7b37395be6.json --project=' + env.projectId
                     sh 'gcloud container clusters get-credentials ' + env.clusterName + ' --region=' + env.location
-                    sh 'helm install http-fun helmchart/ --values helmchart/values.yaml'
+                    sh 'helm upgrade --install --wait --timeout 300s http-fun helmchart/ --values helmchart/values.yaml'
                 }
             }
         }

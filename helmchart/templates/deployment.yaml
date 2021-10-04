@@ -35,16 +35,20 @@ spec:
           imagePullPolicy: {{ .Values.image.pullPolicy }}
           ports:
             - name: http
-              containerPort: 80
+              containerPort: 5000
               protocol: TCP
           livenessProbe:
             httpGet:
-              path: /
+              path: /healthcheck
               port: http
           readinessProbe:
             httpGet:
-              path: /
+              path: /healthcheck
               port: http
+          lifecycle:
+            preStop:
+              exec:
+                command: [ 'curl', 'http://localhost:5000/destroy' ]
           resources:
             {{- toYaml .Values.resources | nindent 12 }}
       {{- with .Values.nodeSelector }}
