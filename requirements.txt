@@ -3,3 +3,4 @@ waitress
 gitpython
 pytz
 GitPython
+requests

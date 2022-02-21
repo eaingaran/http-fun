@@ -6,6 +6,8 @@ import re
 from datetime import datetime
 from logging.config import fileConfig
 from os import path
+import requests
+import socket
 
 import pytz
 from flask import Flask, request, jsonify
@@ -67,7 +69,8 @@ def hello_world():
 @app.route('/versionz')
 def version_info():
     curr_ts = datetime.now(pytz.utc)
-    info = {'git hash': get_config('SHA'), 'name': get_config('ProjectName')}
+    info = {'git hash': get_config('SHA'), 'name': get_config('ProjectName'),
+            'image version': 'v1.73', 'hostname': socket.gethostname()}
     log_requests(request, curr_ts, 200)
     return jsonify(info), 200
 
@@ -85,6 +88,20 @@ def destroy_app():
         raise RuntimeError('Not running with the Werkzeug Server')
     shutdown_sequence()
     return 'Shutdown initiated...'
+
+
+@app.route('/redirect')
+def redirect():
+    curr_ts = datetime.now(pytz.utc)
+    app.logger.info('Redirect request received...')
+    re_host = request.args.get('host')
+    re_route = request.args.get('route')
+    log_requests(request, curr_ts, 200)
+    app.logger.info(f'Trying to get response from http://{re_host}/{re_route}')
+    try:
+        return requests.get(f"http://{re_host}/{re_route}", timeout=60).content
+    except Exception as e:
+        return jsonify({'Status Code': 400, 'Message': str(e)}), 400
 
 
 def start_app(host, port, environment):
@@ -109,3 +126,6 @@ if __name__ == '__main__':
         override_port = args.port
 
     start_app('0.0.0.0', override_port, args.environment)
+
+# http://${consumer_service_external_ip}/versionz
+# http://${consumer_service_external_ip}/redirect?host=http-fun-pro-service.prod.svc.clusterset.local:5000&route=versionz
