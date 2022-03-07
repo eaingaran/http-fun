@@ -126,6 +126,3 @@ if __name__ == '__main__':
         override_port = args.port
 
     start_app('0.0.0.0', override_port, args.environment)
-
-# http://${consumer_service_external_ip}/versionz
-# http://${consumer_service_external_ip}/redirect?host=http-fun-pro-service.prod.svc.clusterset.local:5000&route=versionz

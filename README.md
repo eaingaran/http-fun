@@ -64,3 +64,8 @@ curl localhost:5000/helloworld
 curl localhost:5000/helloworld?name=AlfredENeumann
 curl localhost:5000/versionz
 ```
+
+#### Test redirect
+```
+/redirect?host=hostname:5000&route=versionz
+```
